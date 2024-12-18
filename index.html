@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sectioned Text Input</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  
+  <div class="bg-white p-6 rounded shadow-md w-full max-w-2xl">
+    <h1 class="text-2xl font-semibold text-gray-800 mb-4">Text Sections</h1>
+    <p class="text-sm text-gray-600 mb-4">
+      This text area has four sections. On the first submit, the body text will be removed, leaving only the headings. Afterwards, you must re-enter the content.
+    </p>
+
+    <!-- Notification -->
+    <div id="notification" class="hidden mb-4 p-4 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded">
+      Data was deleted. Please re-enter the body content under each heading.
+    </div>
+
+    <!-- Text Area -->
+    <textarea 
+      id="textArea" 
+      rows="10" 
+      class="w-full p-4 border rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto"
+    >
+Section 1 Heading
+This is the body text for section 1. It provides detailed information.
+
+Section 2 Heading
+This is the body text for section 2. More details are explained here.
+
+Section 3 Heading
+This is the body text for section 3. Additional information is included.
+
+Section 4 Heading
+This is the body text for section 4. Further elaboration goes here.
+    </textarea>
+
+    <div class="mt-4 text-right">
+      <button 
+        id="submitBtn" 
+        class="bg-blue-500 text-white px-6 py-2 rounded font-semibold hover:bg-blue-600 transition"
+      >
+        Submit
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let firstClick = true;
+
+    document.getElementById('submitBtn').addEventListener('click', function() {
+      const textArea = document.getElementById('textArea');
+      const notification = document.getElementById('notification');
+
+      if (firstClick) {
+        // Split lines and remove all body text, leaving only headings
+        const lines = textArea.value.split('\n');
+        let cleanedLines = [];
+        
+        // We'll consider every odd line (or next line) after a heading as body text to remove
+        // Assuming pattern: Heading line, then one or more body lines until next heading or end
+        // We'll treat lines starting with "Section" as headings.
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line.toLowerCase().startsWith('section') && line.toLowerCase().includes('heading')) {
+            // Keep heading
+            cleanedLines.push(line);
+          } else if (line !== '' && !line.toLowerCase().startsWith('section')) {
+            // This is body text, skip it
+            continue;
+          }
+        }
+
+        textArea.value = cleanedLines.join('\n\n');
+
+        // Show notification
+        notification.classList.remove('hidden');
+
+        // Disable first click behavior
+        firstClick = false;
+      } else {
+        // Subsequent clicks can handle form submission or other logic.
+        // For now, we do nothing or you can add code as needed.
+      }
+    });
+  </script>
+
+</body>
+</html>
