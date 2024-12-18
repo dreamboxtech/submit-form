@@ -11,7 +11,7 @@
   <div class="bg-white p-6 rounded shadow-md w-full max-w-2xl">
     <h1 class="text-2xl font-semibold text-gray-800 mb-4">Text Sections</h1>
     <p class="text-sm text-gray-600 mb-4">
-      This text area has four sections. On the first submit, the body text will be removed, leaving only the headings. Afterwards, even if you refresh or revisit, only headings will remain, forcing you to re-enter the data.
+      Initially, only section headings are displayed. Please enter the body text under each heading. Once you submit the first time, the body text will be removed, and you'll have to re-enter. If needed, you can restore the original data.
     </p>
 
     <!-- Notification -->
@@ -26,7 +26,14 @@
       class="w-full p-4 border rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto"
     ></textarea>
 
-    <div class="mt-4 text-right">
+    <div class="mt-4 flex justify-between">
+      <button 
+        id="restoreBtn"
+        class="bg-green-500 text-white px-4 py-2 rounded font-semibold hover:bg-green-600 transition"
+      >
+        Restore Original Data
+      </button>
+
       <button 
         id="submitBtn" 
         class="bg-blue-500 text-white px-6 py-2 rounded font-semibold hover:bg-blue-600 transition"
@@ -37,62 +44,98 @@
   </div>
 
   <script>
-    const originalText = 
-`Section 1 Heading
-This is the body text for section 1. It provides detailed information.
+    // Define the original data with headings and bodies
+    const originalData = `
+Section 1: The history of mars
+Mars has been studied extensively by multiple space agencies. It is often called the Red Planet.
 
-Section 2 Heading
-This is the body text for section 2. More details are explained here.
+Section 2: Water on mars
+There is evidence of ancient water flows and ice caps at the poles of Mars.
 
-Section 3 Heading
-This is the body text for section 3. Additional information is included.
+Section 3: Terraforming challenges
+Turning Mars into a habitable planet poses significant scientific and ethical questions.
 
-Section 4 Heading
-This is the body text for section 4. Further elaboration goes here.
-`;
+Section 4: Future missions
+Many upcoming missions aim to bring samples from Mars back to Earth and eventually send humans there.
+`.trim();
 
-    const justHeadings = 
-`Section 1 Heading
-
-Section 2 Heading
-
-Section 3 Heading
-
-Section 4 Heading
-`;
-
+    let firstClick = true;
     const textArea = document.getElementById('textArea');
     const notification = document.getElementById('notification');
-    const submitBtn = document.getElementById('submitBtn');
-    let firstClick = true;
 
-    // Check localStorage to see if data was previously deleted
-    const dataDeletedFlag = localStorage.getItem('dataDeleted');
+    // On page load, only show headings (no body)
+    textArea.value = extractHeadings(originalData);
 
-    // If data was deleted before, show only headings
-    if (dataDeletedFlag === 'true') {
-      textArea.value = justHeadings;
-      firstClick = false; // No deletion needed on first click this time
-    } else {
-      // Otherwise, show original text with body
-      textArea.value = originalText;
-    }
-
-    submitBtn.addEventListener('click', function() {
+    document.getElementById('submitBtn').addEventListener('click', function() {
       if (firstClick) {
-        // Remove body text, leaving only headings
-        textArea.value = justHeadings;
+        removeBodyText();
         notification.classList.remove('hidden');
-
-        // Set flag in localStorage so that after refresh or revisit, data stays deleted
-        localStorage.setItem('dataDeleted', 'true');
-
         firstClick = false;
       } else {
-        // After the initial deletion, subsequent clicks won't restore or remove text;
-        // you can handle form submission or other logic here if needed.
+        // On subsequent clicks, handle other logic if needed.
       }
     });
+
+    document.getElementById('restoreBtn').addEventListener('click', function() {
+      // Restore the full original data
+      textArea.value = originalData;
+      notification.classList.add('hidden');
+      // Reset firstClick if you want the deletion logic again on next submit.
+      firstClick = true;
+    });
+
+    function isHeadingLine(line) {
+      // Check if line matches pattern like "Section <number>:"
+      // Example: "Section 1: The history of mars"
+      return /^Section\s+\d+\s*:\s*/i.test(line);
+    }
+
+    function extractHeadings(data) {
+      const lines = data.split('\n');
+      let result = [];
+      let lastWasHeading = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (isHeadingLine(line)) {
+          // Keep heading
+          result.push(line);
+          lastWasHeading = true;
+        } else {
+          // This is body text, skip it
+          // If there's a blank line right after heading, you can keep it.
+          // Let's keep a blank line after each heading to maintain spacing.
+          if (lastWasHeading) {
+            result.push(''); 
+            lastWasHeading = false;
+          }
+        }
+      }
+      return result.join('\n');
+    }
+
+    function removeBodyText() {
+      const lines = textArea.value.split('\n');
+      let cleanedLines = [];
+      let lastLineWasHeading = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (isHeadingLine(line)) {
+          cleanedLines.push(line);
+          lastLineWasHeading = true;
+        } else {
+          // For body lines, skip them.
+          // If we have a blank line after heading, let's keep one blank line.
+          if (line === '' && lastLineWasHeading) {
+            cleanedLines.push('');
+            lastLineWasHeading = false;
+          }
+        }
+      }
+
+      textArea.value = cleanedLines.join('\n');
+    }
   </script>
 
 </body>
